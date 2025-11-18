@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather Explorer Learning Portal</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap");
+
+        :root {
+            --primary: #4c9aff;
+            --secondary: #ffbf47;
+            --success: #5bd75b;
+            --info: #b37cff;
+            --warning: #ff8f59;
+            --danger: #ff6b6b;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --cloud: #e9f0fb;
+            --rain: #a4caed;
+            --sun: #ffcf5c;
+            --snow: #ffffff;
+            --thunder: #9059ff;
+            --wind: #c5e0f5;
+            --border-radius: 18px;
+            --box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Nunito", sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4eff9 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--dark);
+            padding: 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 960px;
+            min-height: 720px;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            position: relative;
+            padding: 1.5rem;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 10;
+            gap: 0.75rem;
+        }
+
+        .title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .title span {
+            background: linear-gradient(135deg, var(--primary), var(--info));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            gap: 1.25rem;
+            position: relative;
+            z-index: 5;
+            padding-bottom: 3rem;
+        }
+
+        .weather-display {
+            display: flex;
+            flex-wrap: wrap;
+            background: linear-gradient(to right, var(--primary), #70b3ff);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            color: white;
+            box-shadow: 0 8px 16px rgba(76, 154, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            min-height: 180px;
+            transition: var(--transition);
+            gap: 1rem;
+        }
+
+        .weather-details {
+            flex: 1 1 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .location {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+        }
+
+        .date {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin-bottom: 0.75rem;
+        }
+
+        .temperature {
+            font-size: 3rem;
+            font-weight: 800;
+            position: relative;
+            display: inline-block;
+            line-height: 1;
+        }
+
+        .temperature::after {
+            content: "°F";
+            position: absolute;
+            top: 10px;
+            right: -30px;
+            font-size: 1.2rem;
+            font-weight: 400;
+        }
+
+        .condition {
+            margin-top: 0.25rem;
+            font-size: 1rem;
+        }
+
+        .weather-icon {
+            flex: 0 0 180px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .svg-container {
+            width: 140px;
+            height: 140px;
+        }
+
+        .weather-forecast {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            scroll-behavior: smooth;
+        }
+
+        .weather-forecast::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .weather-forecast::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .weather-forecast::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+
+        .forecast-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 90px;
+            padding: 1rem 0.65rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .forecast-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .forecast-day {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+
+        .forecast-icon {
+            margin-bottom: 0.4rem;
+            width: 36px;
+            height: 36px;
+        }
+
+        .forecast-temp {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .weather-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .weather-badge {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            padding: 0.35rem 0.8rem;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 180px;
+            background-color: var(--dark);
+            color: white;
+            text-align: center;
+            border-radius: 6px;
+            padding: 0.5rem;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--dark) transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .feedback-circle {
+            position: absolute;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+            z-index: 20;
+            font-size: 1rem;
+        }
+
+        .feedback-circle:hover {
+            transform: scale(1.1);
+        }
+
+        .animated-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            z-index: 1;
+            opacity: 0.05;
+        }
+
+        .animated-bg svg {
+            position: absolute;
+            width: 100%;
+            height: auto;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 4px solid rgba(76, 154, 255, 0.1);
+            border-top-color: var(--primary);
+            animation: spin 1s infinite linear;
+            margin-bottom: 1rem;
+        }
+
+        .loading-text {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .status-banner {
+            background-color: rgba(255, 255, 255, 0.85);
+            border-radius: 14px;
+            padding: 0.75rem 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .status-banner.visible {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-banner.error {
+            color: var(--danger);
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        .cloud {
+            animation: float 5s ease-in-out infinite;
+        }
+
+        .cloud:nth-child(2) {
+            animation-delay: 1s;
+        }
+
+        .cloud:nth-child(3) {
+            animation-delay: 2s;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .svg-sun {
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .svg-rain {
+            animation: fall 1.5s linear infinite;
+        }
+
+        @keyframes fall {
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            to {
+                transform: translateY(10px);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .container {
+                border-radius: 0;
+                padding: 1rem;
+                min-height: 100vh;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .weather-display {
+                padding: 1.2rem;
+            }
+
+            .learning-modules {
+                grid-template-columns: 1fr;
+            }
+
+            .forecast-item {
+                min-width: 80px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div id="loading-overlay" class="loading-overlay">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading forecast...</div>
+        </div>
+
+        <div class="animated-bg">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+                <path fill="#4c9aff" fill-opacity="0.1"
+                    d="M0,288L48,272C96,256,192,224,288,197.3C384,171,480,149,576,165.3C672,181,768,235,864,250.7C960,267,1056,245,1152,208C1248,171,1344,117,1392,90.7L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z">
+                </path>
+            </svg>
+        </div>
+
+        <div class="header">
+            <div class="title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+                </svg>
+                <span>Weather Explorer</span>
+            </div>
+        </div>
+
+        <div id="status-banner" class="status-banner"></div>
+
+        <div class="main-content">
+            <div class="weather-display">
+                <div class="weather-details">
+                    <div class="location" id="location-label">Loading...</div>
+                    <div class="date" id="date-label"></div>
+                    <div class="temperature" id="temperature">--</div>
+                    <div class="condition" id="condition-text">Fetching current conditions</div>
+                    <div class="weather-badges" id="badge-container"></div>
+                </div>
+                <div class="weather-icon">
+                    <div class="svg-container" id="weather-visual"></div>
+                </div>
+            </div>
+
+            <div class="section-title">Upcoming precipitation outlook</div>
+            <div class="weather-forecast" id="forecast-container"></div>
+
+        </div>
+
+        <div class="feedback-circle" id="refresh-btn">⟳</div>
+    </div>
+
+    <script>
+        const DEFAULT_LOCATION = {
+            label: "Chicago, IL",
+            latitude: 41.894689,
+            longitude: -87.677832
+        };
+
+        const state = {
+            locationLabel: DEFAULT_LOCATION.label,
+            coordinates: {
+                latitude: DEFAULT_LOCATION.latitude,
+                longitude: DEFAULT_LOCATION.longitude
+            }
+        };
+
+        const locationLabelEl = document.getElementById("location-label");
+        const dateLabelEl = document.getElementById("date-label");
+        const temperatureEl = document.getElementById("temperature");
+        const conditionEl = document.getElementById("condition-text");
+        const badgeContainer = document.getElementById("badge-container");
+        const weatherVisual = document.getElementById("weather-visual");
+        const forecastContainer = document.getElementById("forecast-container");
+        const loadingOverlay = document.getElementById("loading-overlay");
+        const loadingText = loadingOverlay.querySelector(".loading-text");
+        const statusBanner = document.getElementById("status-banner");
+        const refreshBtn = document.getElementById("refresh-btn");
+
+        const getSunIcon = () => `
+            <svg width="140" height="140" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle class="svg-sun" cx="60" cy="45" r="25" fill="#FFCF5C" />
+                <path class="cloud" d="M95 70C95 59 86 50 75 50C64 50 55 59 55 70C55 70 55 70 55 70C55 70 35 70 35 70C29.5 70 25 74.5 25 80C25 85.5 29.5 90 35 90H95C100.5 90 105 85.5 105 80C105 74.5 100.5 70 95 70Z" fill="#E9F0FB" />
+                <path class="cloud" d="M60 80C60 74 55 69 49 69C43 69 38 74 38 80H60Z" fill="#D8E6FB" />
+            </svg>
+        `;
+
+        const getRainIcon = () => `
+            <svg width="140" height="140" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path class="cloud" d="M98 62C98 47.6406 86.3594 36 72 36C59.0938 36 48.4844 44.9531 46.4219 57.2734C41.6562 55.3906 36.0938 56.1562 31.7891 59.3984C27.4219 62.6953 24.9375 68.0234 25.4375 73.5859C26.1328 81.2031 32.2266 87 39.8789 87H103.5C111.18 87 117.25 80.8906 117.25 73.2109C117.25 65.5312 111.18 59.3906 103.5 59.3906C101.562 59.3906 99.6875 59.7266 98 60.3438V62Z" fill="#D4E0F4"/>
+                <path class="svg-rain" d="M55 98C55 96.3431 53.6569 95 52 95C50.3431 95 49 96.3431 49 98V115C49 116.657 50.3431 118 52 118C53.6569 118 55 116.657 55 115V98Z" fill="#4c9aff"/>
+                <path class="svg-rain" d="M72 102C72 100.343 70.6569 99 69 99C67.3431 99 66 100.343 66 102V122C66 123.657 67.3431 125 69 125C70.6569 125 72 123.657 72 122V102Z" fill="#4c9aff"/>
+                <path class="svg-rain" d="M89 96C89 94.3431 87.6569 93 86 93C84.3431 93 83 94.3431 83 96V112C83 113.657 84.3431 115 86 115C87.6569 115 89 113.657 89 112V96Z" fill="#4c9aff"/>
+            </svg>
+        `;
+
+        const renderWeatherIcon = precipProbability => {
+            if (!weatherVisual) {
+                return;
+            }
+            const chance = Number(precipProbability);
+            weatherVisual.innerHTML = chance > 25 ? getRainIcon() : getSunIcon();
+        };
+
+        renderWeatherIcon(0);
+
+        const showLoading = (message = "Loading forecast...") => {
+            loadingText.textContent = message;
+            loadingOverlay.classList.remove("hidden");
+        };
+
+        const hideLoading = () => {
+            loadingOverlay.classList.add("hidden");
+        };
+
+        const showStatus = (message, type = "info") => {
+            statusBanner.textContent = message;
+            statusBanner.className = `status-banner visible ${type === "error" ? "error" : ""}`;
+        };
+
+        const clearStatus = () => {
+            statusBanner.className = "status-banner";
+            statusBanner.textContent = "";
+        };
+
+        const formatDateTime = value => {
+            const date = new Date(value);
+            return new Intl.DateTimeFormat("en-US", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit"
+            }).format(date);
+        };
+
+        const getConditionText = (precipProbability, humidity) => {
+            if (precipProbability >= 70) {
+                return "High chance of showers";
+            }
+            if (precipProbability >= 30) {
+                return "Spotty rain risk";
+            }
+            if (humidity >= 80) {
+                return "Humid but calm";
+            }
+            return "Clear and comfortable";
+        };
+
+        const renderBadges = ({ humidity, dewPoint, precipProbability, utcOffset }) => {
+            const badges = [
+                {
+                    label: "Humidity",
+                    value: `${humidity}%`,
+                    tooltip: "Relative humidity describes how saturated the air feels."
+                },
+                {
+                    label: "Dew pt",
+                    value: `${dewPoint.toFixed(1)}°F`,
+                    tooltip: "When the air temperature equals the dew point, fog or drizzle often forms."
+                },
+                {
+                    label: "Precip",
+                    value: `${precipProbability}%`,
+                    tooltip: "Precipitation probability represents the chance for measurable rain."
+                },
+                {
+                    label: "UTC offset",
+                    value: `${utcOffset / 3600}h`,
+                    tooltip: "Open-Meteo returns timestamps in UTC plus the offset above."
+                }
+            ];
+
+            badgeContainer.innerHTML = badges
+                .map(
+                    badge => `
+                <div class="weather-badge tooltip">
+                    <span>${badge.label}:</span>
+                    <strong>${badge.value}</strong>
+                    <span class="tooltiptext">${badge.tooltip}</span>
+                </div>`
+                )
+                .join("");
+        };
+
+        const renderForecastIcon = (probability, date) => {
+            const value = Number(probability);
+            if (!Number.isNaN(value) && value > 25) {
+                return "🌧️";
+            }
+            const hour = date.getHours();
+            if (hour >= 18 || hour < 4) {
+                return "🌙";
+            }
+            return "☀️";
+        };
+
+        const renderForecast = hourly => {
+            if (!hourly || !hourly.time || !hourly.precipitation_probability) {
+                forecastContainer.innerHTML = "<p>No hourly data available.</p>";
+                return;
+            }
+
+            const entries = hourly.time.slice(0, 10).map((time, index) => {
+                const date = new Date(time);
+                const day = new Intl.DateTimeFormat("en-US", {
+                    weekday: "short",
+                    hour: "numeric"
+                }).format(date);
+                const probability = hourly.precipitation_probability[index];
+                const icon = renderForecastIcon(probability, date);
+                const probabilityDisplay = probability ?? "--";
+
+                return `
+                    <div class="forecast-item">
+                        <div class="forecast-day">${day}</div>
+                        <div class="forecast-icon">${icon}</div>
+                        <div class="forecast-temp">${probabilityDisplay}%</div>
+                    </div>
+                `;
+            });
+
+            forecastContainer.innerHTML = entries.join("");
+        };
+
+        const updateHero = (data, label) => {
+            const minutelyTimes = data.minutely15?.time ?? [];
+            const firstTime = minutelyTimes[0] ?? Date.now();
+            const temperature = data.minutely15?.temperature_2m?.[0];
+            const humidity = data.minutely15?.relative_humidity_2m?.[0] ?? 0;
+            const dewPoint = data.minutely15?.dew_point_2m?.[0] ?? 0;
+            const precipProbability = data.hourly?.precipitation_probability?.[0] ?? 0;
+            const utcOffset = data.coordinates?.utcOffsetSeconds ?? 0;
+
+            dateLabelEl.textContent = formatDateTime(firstTime);
+            locationLabelEl.textContent = label;
+            temperatureEl.textContent = temperature !== undefined ? Math.round(temperature) : "--";
+            conditionEl.textContent = getConditionText(precipProbability, humidity);
+
+            renderBadges({ humidity, dewPoint, precipProbability, utcOffset });
+            renderWeatherIcon(precipProbability);
+        };
+
+        const fetchWeather = async (coords, label) => {
+            showLoading("Connecting to Weather Explorer...");
+            clearStatus();
+            try {
+                const params = new URLSearchParams({
+                    latitude: coords.latitude,
+                    longitude: coords.longitude
+                });
+                const response = await fetch(`/weather?${params.toString()}`);
+
+                if (!response.ok) {
+                    throw new Error("Unable to fetch weather data");
+                }
+
+                const weather = await response.json();
+                state.locationLabel = label;
+                state.coordinates = coords;
+
+                updateHero(weather, label);
+                renderForecast(weather.hourly);
+                hideLoading();
+                showStatus(`Forecast refreshed for ${label}.`);
+            } catch (error) {
+                console.error(error);
+                hideLoading();
+                showStatus("Something went wrong fetching the forecast.", "error");
+            }
+        };
+
+        const refreshCurrent = () => {
+            fetchWeather(state.coordinates, state.locationLabel);
+        };
+
+        refreshBtn.addEventListener("click", refreshCurrent);
+
+        fetchWeather(state.coordinates, state.locationLabel);
+    </script>
+</body>
+
+</html>
