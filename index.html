@@ -626,20 +626,24 @@
         };
 
         const renderBadges = ({ humidity, dewPoint, precipProbability, utcOffset }) => {
+            const safeHumidity = humidity ?? 0;
+            const safePrecip = precipProbability ?? 0;
+            const safeDewPoint = dewPoint ?? 0;
+
             const badges = [
                 {
                     label: "Humidity",
-                    value: `${humidity}%`,
+                    value: `${safeHumidity}%`,
                     tooltip: "Relative humidity describes how saturated the air feels."
                 },
                 {
                     label: "Dew pt",
-                    value: `${dewPoint.toFixed(1)}°F`,
+                    value: `${Number(safeDewPoint).toFixed(1)}°F`,
                     tooltip: "When the air temperature equals the dew point, fog or drizzle often forms."
                 },
                 {
                     label: "Precip",
-                    value: `${precipProbability}%`,
+                    value: `${safePrecip}%`,
                     tooltip: "Precipitation probability represents the chance for measurable rain."
                 },
                 {
@@ -703,14 +707,25 @@
 
         const updateHero = (data, label) => {
             const minutelyTimes = data.minutely15?.time ?? [];
-            const firstTime = minutelyTimes[0] ?? Date.now();
-            const temperature = data.minutely15?.temperature_2m?.[0];
-            const humidity = data.minutely15?.relative_humidity_2m?.[0] ?? 0;
-            const dewPoint = data.minutely15?.dew_point_2m?.[0] ?? 0;
-            const precipProbability = data.hourly?.precipitation_probability?.[0] ?? 0;
+            const current = data.current ?? {};
+            const now = Date.now();
+            const closestMinutely = minutelyTimes.find(time => time >= now) ?? minutelyTimes[0];
+            const displayTime = current.time ?? closestMinutely ?? now;
+            const temperature =
+                current.temperature_2m ?? data.minutely15?.temperature_2m?.[0];
+            const humidity =
+                current.relative_humidity_2m ??
+                data.minutely15?.relative_humidity_2m?.[0] ??
+                0;
+            const dewPoint =
+                current.dew_point_2m ?? data.minutely15?.dew_point_2m?.[0] ?? 0;
+            const precipProbability =
+                current.precipitation_probability ??
+                data.hourly?.precipitation_probability?.[0] ??
+                0;
             const utcOffset = data.coordinates?.utcOffsetSeconds ?? 0;
 
-            dateLabelEl.textContent = formatDateTime(firstTime);
+            dateLabelEl.textContent = formatDateTime(displayTime);
             locationLabelEl.textContent = label;
             temperatureEl.textContent = temperature !== undefined ? Math.round(temperature) : "--";
             conditionEl.textContent = getConditionText(precipProbability, humidity);

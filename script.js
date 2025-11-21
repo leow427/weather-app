@@ -13,6 +13,7 @@ const baseParams = {
     longitude: -87.677832,
     minutely_15: ["temperature_2m", "relative_humidity_2m", "dew_point_2m"],
     hourly: ["precipitation_probability"],
+    current: ["temperature_2m", "relative_humidity_2m", "dew_point_2m", "precipitation_probability"],
     temperature_unit: "fahrenheit"
 };
 
@@ -20,6 +21,7 @@ const url = "https://api.open-meteo.com/v1/forecast";
 
 const buildWeatherData = response => {
     const utcOffsetSeconds = response.utcOffsetSeconds();
+    const current = response.current();
     const minutely15 = response.minutely15();
     const hourly = response.hourly();
 
@@ -49,6 +51,13 @@ const buildWeatherData = response => {
             relative_humidity_2m: minutely15.variables(1).valuesArray(),
             dew_point_2m: minutely15.variables(2).valuesArray()
         },
+        current: {
+            time: new Date((Number(current.time()) + utcOffsetSeconds) * 1000),
+            temperature_2m: current.variables(0).value(),
+            relative_humidity_2m: current.variables(1).value(),
+            dew_point_2m: current.variables(2).value(),
+            precipitation_probability: current.variables(3).value()
+        },
         hourly: {
             time: Array.from(
                 {
@@ -75,6 +84,7 @@ const fetchWeatherDataAsync = async overrides => {
         ...overrides,
         minutely_15: baseParams.minutely_15,
         hourly: baseParams.hourly,
+        current: baseParams.current,
         temperature_unit: baseParams.temperature_unit
     };
     const responses = await fetchWeatherApi(url, requestParams);
@@ -151,6 +161,40 @@ app.get("/weather", async (req, res) => {
     }
 });
 
+
+
+const getTemperature = async (lat, lon) => {
+  const data = await fetchWeatherDataAsync({ latitude: lat, longitude: lon });
+  return data.current?.temperature_2m;
+};
+
+
+
+const temp = await getTemperature
+
+
+///sends temp to python file to convert to serial for arduino
+function sendToPython(temp) {
+    fetch('/process_data', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ myVariable: temp }),
+    })
+    .then(response => response.json())
+    .then(data => console.log(data.message))
+    .catch(error => console.error('Error', error));
+}
+
+sendToPython(temp);
+
+
+
+
 app.listen(port, () => {
     console.log(`Weather service listening on http://localhost:${port}`);
 });
+
+
+
